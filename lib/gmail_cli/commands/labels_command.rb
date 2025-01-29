@@ -15,34 +15,26 @@ module GmailCLI
         
         # Get the account configuration
         account_name = options[:account]
-        configs = if account_name
-          raise Error, "Account '#{account_name}' not found" unless account_manager.get_account(account_name)
-          [[account_name, account_manager.get_account(account_name)]]
-        else
-          account_manager.each_account.to_a
-        end
-
-        if configs.empty?
+        account = account_manager.get_account(account_name)
+        
+        if account.nil?
           puts "No accounts configured. Use 'gmail-cli account add' to add an account."
           return
         end
-
-        configs.each do |name, config|
-          service = GmailService.new(config)
-          labels = service.list_labels
-          
-          puts "\nLabels for account '#{name}':"
-          puts "-" * (20 + name.length)
-          
-          if labels.empty?
-            puts "No labels found."
-          else
-            labels.each { |label| puts "- #{label.name}" }
-          end
+        
+        service = GmailService.new(account)
+        labels = service.list_labels
+        
+        puts "\nLabels for account '#{account_name || 'default'}':"
+        puts "-" * (20 + (account_name || 'default').length)
+        
+        if labels.empty?
+          puts "No labels found."
+        else
+          labels.each { |label| puts "- #{label.name}" }
         end
       rescue Error => e
         puts "Error: #{e.message}"
-        exit 1
       end
     end
   end

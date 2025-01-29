@@ -8,7 +8,7 @@ module GmailCLI
     def initialize
       @config_dir = File.join(Dir.home, '.gmail-cli')
       FileUtils.mkdir_p(@config_dir)
-      load_accounts
+      @accounts = load_accounts
     end
 
     def add_account(name)
@@ -48,6 +48,11 @@ module GmailCLI
       puts "Account '#{name}' removed successfully."
     end
 
+    def get_account(name)
+      return @accounts.values.first if name.nil? && !@accounts.empty?
+      @accounts[name]
+    end
+
     def list_accounts
       if @accounts.empty?
         puts "No accounts configured."
@@ -60,24 +65,15 @@ module GmailCLI
       end
     end
 
-    def get_account(name)
-      @accounts[name]
-    end
-
-    def each_account
-      @accounts.each do |name, config|
-        yield name, config
-      end
+    def each_account(&block)
+      return enum_for(:each_account) unless block_given?
+      @accounts.each(&block)
     end
 
     private
 
     def load_accounts
-      @accounts = if File.exist?(ACCOUNTS_FILE)
-        YAML.load_file(ACCOUNTS_FILE) || {}
-      else
-        {}
-      end
+      YAML.load_file(ACCOUNTS_FILE) rescue {}
     end
 
     def save_accounts
