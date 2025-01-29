@@ -13,6 +13,7 @@ module GmailCLI
     def initialize(account_config = nil)
       @token_file = account_config&.fetch(:token_file)
       @credentials_file = account_config&.fetch(:credentials_file) || DEFAULT_CREDENTIALS_FILE
+      @account_index = account_config&.fetch(:account_index, 0)
       
       @service = Google::Apis::GmailV1::GmailService.new
       @service.client_options.application_name = APPLICATION_NAME
@@ -94,7 +95,7 @@ module GmailCLI
           thread_id: msg.thread_id,
           subject: msg.payload.headers.find { |h| h.name == 'Subject' }&.value || '(no subject)',
           from: msg.payload.headers.find { |h| h.name == 'From' }&.value || '(unknown sender)',
-          browser_link: "https://mail.google.com/mail/u/0/#inbox/#{msg.thread_id}",
+          browser_link: "https://mail.google.com/mail/u/#{@account_index}/#inbox/#{msg.thread_id}",
           account: get_account_email
         }
       end
